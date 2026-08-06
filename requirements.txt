@@ -1,0 +1,13 @@
+# Exact versions this pipeline was built and tested against.
+# lerobot itself is NOT listed here -- clone the pinned commit below and
+# install it with `pip install -e ".[feetech]"` instead of installing it
+# from PyPI, since we depend on source-level patches applied on top of it.
+
+pygame==2.6.1
+opencv-python==5.0.0.93
+
+# CUDA 12.8 build of torch. Remove the --extra-index-url line (and just
+# `pip install torch`) if you don't have an NVIDIA GPU -- you'll get a
+# CPU-only build, which works but trains/infers much slower.
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0+cu128

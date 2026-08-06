@@ -1,0 +1,21 @@
+Windows + exFAT-formatted drives don't support symlinks/reparse points, so
+checkpointing crashes trying to create checkpoints/last as a symlink. This
+falls back to a real directory copy when symlinking isn't supported. Apply
+to src/lerobot/common/train_utils.py, function update_last_checkpoint().
+Only needed if your training output directory lives on an exFAT drive
+(common for external/portable drives on Windows); NTFS and Linux/macOS
+filesystems don't need this.
+
+--- a/src/lerobot/common/train_utils.py
++++ b/src/lerobot/common/train_utils.py
+@@ -88,7 +88,12 @@ def update_last_checkpoint(checkpoint_dir: Path) -> Path:
+         shutil.rmtree(last_checkpoint_dir)
+     relative_target = checkpoint_dir.relative_to(checkpoint_dir.parent)
+-    last_checkpoint_dir.symlink_to(relative_target)
++    try:
++        last_checkpoint_dir.symlink_to(relative_target)
++    except OSError:
++        # Some filesystems (e.g. exFAT-formatted drives on Windows) don't support
++        # symlinks/reparse points at all. Fall back to a real copy so
++        # `checkpoints/last/pretrained_model` still resolves for eval/rollout.
++        shutil.copytree(checkpoint_dir, last_checkpoint_dir)
