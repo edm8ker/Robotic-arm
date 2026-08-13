@@ -1,5 +1,6 @@
 """
-DualSense Gamepad Teleop — drives the real SO-101 arm.
+Gamepad Teleop — drives the real SO-101 arm. Tested with a PS5 DualSense and an
+Xbox-layout Logitech G F310; see gamepad_control.py for mapping details.
 
 Velocity control: stick/trigger deflection sets how FAST a joint moves, not
 a target position, since a joystick naturally centers at zero -- no neutral

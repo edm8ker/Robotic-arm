@@ -1,8 +1,17 @@
-"""Shared DualSense gamepad control logic for SO-101 teleop and recording.
+"""Shared gamepad control logic for SO-101 teleop and recording.
 
 Pulled out of gamepad_teleop.py so gamepad_record.py can reuse the exact
 same axis/button mapping and tuning (deadzones, signs, speeds) without the
 two scripts drifting apart after future tuning changes.
+
+Confirmed working with two controllers so far: a PS5 DualSense and an
+Xbox-layout Logitech pad. Both report the same axis indices (0-5) and the
+same face-button order (Cross/A=0, Circle/B=1, Square/X=2, Triangle/Y=3),
+so this same mapping should hold for most similarly-laid-out controllers --
+the one thing that varies is how the D-pad is reported (buttons vs. a hat),
+which is auto-detected below. Always re-verify with gamepad_debug.py before
+trusting a new controller, though -- axis order and polarity are not
+guaranteed across brands/drivers.
 """
 
 import time
@@ -19,6 +28,9 @@ AXIS_RIGHT_X = 2
 AXIS_RIGHT_Y = 3
 AXIS_L2 = 4
 AXIS_R2 = 5
+# D-pad fallback for controllers that report it as buttons rather than a hat
+# (the DualSense does; see get_dpad_delta() below for the hat-based path used
+# when a hat is present, e.g. on Xbox-layout pads).
 BUTTON_DPAD_UP = 11
 BUTTON_DPAD_DOWN = 12
 BUTTON_START_PAUSE = 0  # Cross
@@ -59,6 +71,22 @@ def apply_deadzone(value: float, deadzone: float = DEADZONE) -> float:
     return 0.0 if abs(value) < deadzone else value
 
 
+def get_dpad_delta(js) -> float:
+    """+1 for D-pad up, -1 for down, 0 otherwise -- works whether the controller
+    reports the D-pad as a hat (most Xbox-layout pads) or as buttons (DualSense).
+    """
+    if js.get_numhats() > 0:
+        _, hat_y = js.get_hat(0)
+        return float(hat_y)  # pygame hats: y=+1 up, y=-1 down
+
+    dpad_delta = 0.0
+    if js.get_button(BUTTON_DPAD_UP):
+        dpad_delta += 1.0
+    if js.get_button(BUTTON_DPAD_DOWN):
+        dpad_delta -= 1.0
+    return dpad_delta
+
+
 def step_targets(js, current_targets: dict, dt: float) -> dict:
     """Advance current_targets by one control-loop tick based on live stick/trigger state.
 
@@ -70,11 +98,7 @@ def step_targets(js, current_targets: dict, dt: float) -> dict:
         new_val = current_targets[joint] + vel * dt
         current_targets[joint] = max(JOINT_MIN_DEG, min(JOINT_MAX_DEG, new_val))
 
-    dpad_delta = 0.0
-    if js.get_button(BUTTON_DPAD_UP):
-        dpad_delta += 1.0
-    if js.get_button(BUTTON_DPAD_DOWN):
-        dpad_delta -= 1.0
+    dpad_delta = get_dpad_delta(js)
     if dpad_delta != 0.0:
         vel = WRIST_FLEX_SIGN * dpad_delta * WRIST_FLEX_MAX_DEG_PER_S
         new_val = current_targets["wrist_flex"] + vel * dt

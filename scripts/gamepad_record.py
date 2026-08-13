@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-"""Record a dataset via DualSense gamepad teleop (see gamepad_control.py for
-the stick/button mapping and gamepad_teleop.py for a control-only version).
+"""Record a dataset via gamepad teleop (see gamepad_control.py for the stick/button
+mapping and gamepad_teleop.py for a control-only version). Tested with a PS5
+DualSense and an Xbox-layout Logitech G F310.
 
 Unlike kinesthetic_record.py, the arm is never physically touched -- you
 drive it with the gamepad, so your hands (and the camera's view of the

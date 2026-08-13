@@ -1,8 +1,9 @@
 # SO-101 Gamepad Teleop + Recording Pipeline
 
 Companion scripts for [LeRobot](https://github.com/huggingface/lerobot) that let you
-teleoperate an SO-101 (Feetech STS3215 servos) with a PS5 DualSense gamepad, record
-an imitation-learning dataset with it, and train an ACT policy on the result.
+teleoperate an SO-101 (Feetech STS3215 servos) with a gamepad, record an
+imitation-learning dataset with it, and train an ACT policy on the result.
+Confirmed working with a PS5 DualSense and a wired Logitech G F310 so far.
 
 This is **not** a fork of lerobot and does not include any recorded dataset or trained
 weights. A vision-based policy is tied fairly tightly to the exact camera position and
@@ -15,7 +16,11 @@ scratch. Expect similar results, not identical ones.
 - `scripts/gamepad_debug.py` — prints live axis/button indices from your gamepad so
   you can confirm the mapping before touching the robot. **Run this first.**
 - `scripts/gamepad_control.py` — shared axis/button constants and joint mapping, used
-  by both scripts below. Edit this file to match your gamepad and preferences.
+  by both scripts below. Edit this file to match your gamepad and preferences. The
+  DualSense and Logitech G F310 both happen to report axes 0-5 and face buttons 0-3
+  (Cross/A, Circle/B, Square/X, Triangle/Y) identically, so the same constants work
+  for both unchanged. The D-pad is the one thing that differs by controller (buttons
+  vs. a hat), and that's auto-detected at runtime — see `get_dpad_delta()`.
 - `scripts/gamepad_teleop.py` — live gamepad control of the arm, no recording.
 - `scripts/gamepad_record.py` — records an episodic dataset while you drive the arm
   with the gamepad (N/R/D/Q on the keyboard control episode boundaries).
@@ -76,10 +81,12 @@ python src/lerobot/scripts/gamepad_debug.py
 ```
 
 Move one stick/trigger/button at a time and note which axis/button index changes.
-Update the constants at the top of `scripts/gamepad_control.py` to match — the
-indices in this repo were empirically confirmed for one specific DualSense on one
-specific machine and are **not guaranteed to match yours** (different OS/driver/USB
-vs Bluetooth can all shift them). Also flip any `sign` values in `JOINT_CONFIG` /
+Update the constants at the top of `scripts/gamepad_control.py` to match if they
+differ — the indices in this repo were empirically confirmed for a PS5 DualSense and
+a wired Logitech G F310, both on one specific machine, and are **not guaranteed to
+match yours** (different OS/driver/USB vs Bluetooth can all shift them). If your
+controller reports the D-pad as a hat rather than buttons, no changes are needed —
+that's auto-detected. Also flip any `sign` values in `JOINT_CONFIG` /
 `WRIST_FLEX_SIGN` / `GRIPPER_SIGN` if a control moves the wrong direction once you
 test it live.
 
