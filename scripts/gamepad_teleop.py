@@ -35,6 +35,7 @@ from lerobot.scripts.gamepad_control import (
     FPS,
     HOME_MOVE_DURATION_S,
     PORT,
+    auto_detect_port,
     move_to_home,
     step_targets,
 )
@@ -50,9 +51,10 @@ def main():
     js.init()
     print(f"Connected: {js.get_name()}")
 
-    robot_config = SOFollowerRobotConfig(port=PORT)
+    port = auto_detect_port(fallback=PORT)
+    robot_config = SOFollowerRobotConfig(port=port)
     robot = SOFollower(robot_config)
-    print(f"Connecting to robot on {PORT}...")
+    print(f"Connecting to robot on {port}...")
     robot.connect()
     print("Robot connected.\n")
 

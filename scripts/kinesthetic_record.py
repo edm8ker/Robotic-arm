@@ -40,6 +40,7 @@ from lerobot.datasets.dataset_tools import delete_episodes
 from lerobot.processor import make_default_processors
 from lerobot.robots.so_follower import SOFollower
 from lerobot.robots.so_follower.config_so_follower import SOFollowerRobotConfig
+from lerobot.scripts.gamepad_control import auto_detect_port
 from lerobot.utils.constants import ACTION, OBS_STR
 from lerobot.utils.feature_utils import build_dataset_frame, combine_feature_dicts
 from lerobot.utils.keyboard_input import apply_recording_control, create_key_listener
@@ -87,8 +88,9 @@ def init_recording_keyboard_listener():
 def main():
     init_logging()
 
+    port = auto_detect_port(fallback=PORT)
     robot_config = SOFollowerRobotConfig(
-        port=PORT,
+        port=port,
         cameras={
             "top": OpenCVCameraConfig(index_or_path=CAMERA_INDEX, fps=FPS, width=640, height=480),
         },
@@ -125,7 +127,7 @@ def main():
         encoder_threads=2,
     )
 
-    print(f"Connecting to arm on {PORT} and camera index {CAMERA_INDEX}...")
+    print(f"Connecting to arm on {port} and camera index {CAMERA_INDEX}...")
     robot.connect()
     # Kinesthetic teaching: disable torque so the arm can be moved freely by hand.
     robot.bus.disable_torque()

@@ -55,6 +55,7 @@ from lerobot.scripts.gamepad_control import (
     FPS as GAMEPAD_FPS,
     HOME_MOVE_DURATION_S,
     PORT,
+    auto_detect_port,
     move_to_home,
     step_targets,
 )
@@ -110,8 +111,9 @@ def main():
     js.init()
     print(f"Connected gamepad: {js.get_name()}")
 
+    port = auto_detect_port(fallback=PORT)
     robot_config = SOFollowerRobotConfig(
-        port=PORT,
+        port=port,
         cameras={
             "top": OpenCVCameraConfig(index_or_path=CAMERA_INDEX, fps=FPS, width=640, height=480),
         },
@@ -145,7 +147,7 @@ def main():
         encoder_threads=2,
     )
 
-    print(f"Connecting to arm on {PORT} and camera index {CAMERA_INDEX}...")
+    print(f"Connecting to arm on {port} and camera index {CAMERA_INDEX}...")
     robot.connect()
     print("Connected. Torque enabled -- the gamepad drives the arm.")
 

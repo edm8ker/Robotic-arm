@@ -18,9 +18,9 @@ import time
 
 # COM8 is specific to this machine/board -- Windows assigns COM numbers per
 # USB enumeration history, not per hardware, so it WILL differ on another
-# computer (and can even change here after a board swap). Find yours with
-# `lerobot-find-port` (unplug/replug the board when it asks) or Device
-# Manager under "Ports (COM & LPT)".
+# computer (and can even change here after a board swap). Only used as a
+# last-resort fallback now -- see auto_detect_port() below, which finds the
+# real port automatically in the common case.
 PORT = "COM8"
 FPS = 50
 DEADZONE = 0.08
@@ -70,6 +70,55 @@ GRIPPER_MAX_PER_S = 60.0  # units/sec on the 0-100 gripper scale
 # clamped separately to its native 0-100 scale.
 JOINT_MIN_DEG = -100.0
 JOINT_MAX_DEG = 100.0
+
+
+# USB vendor:product ID reported by the CH343 USB-serial chip on the servo
+# board. Used to filter candidate ports before probing them -- see
+# auto_detect_port().
+SERVO_BOARD_VID_PID = (0x1A86, 0x55D3)
+
+
+def auto_detect_port(fallback: str = PORT) -> str:
+    """Find the serial port the SO-101 servo bus is actually on.
+
+    Filters connected serial ports down to ones matching the servo board's
+    known USB vendor:product ID, then confirms identity for real by
+    attempting a handshake (pinging the shoulder_pan motor and checking its
+    firmware) on each candidate -- so even if more than one CH343-pattern
+    port shows up (e.g. a stale Windows entry left behind after a board
+    swap), only the one that's actually alive and talking the Feetech
+    protocol gets picked. No user interaction required.
+
+    Falls back to `fallback` (the hardcoded PORT constant by default) with a
+    printed warning if no candidate port handshakes successfully -- so
+    behavior degrades gracefully rather than crashing if this heuristic
+    doesn't fit a given setup (e.g. a differently-chipped servo board).
+    """
+    import serial.tools.list_ports as list_ports
+
+    from lerobot.motors import Motor, MotorNormMode
+    from lerobot.motors.feetech import FeetechMotorsBus
+
+    candidates = [p.device for p in list_ports.comports() if (p.vid, p.pid) == SERVO_BOARD_VID_PID]
+
+    # A single motor is enough to confirm identity -- keeps the probe fast
+    # and avoids requiring all 6 to be wired up / powered for detection to work.
+    probe_motors = {"shoulder_pan": Motor(1, "sts3215", MotorNormMode.RANGE_M100_100)}
+    for candidate in candidates:
+        try:
+            bus = FeetechMotorsBus(port=candidate, motors=probe_motors)
+            bus.connect(handshake=True)
+            bus.disconnect(disable_torque=False)
+        except Exception:
+            continue
+        print(f"Auto-detected servo bus on {candidate}.")
+        return candidate
+
+    print(
+        f"Could not auto-detect the servo bus (checked: {candidates or 'no CH343-pattern ports found'}). "
+        f"Falling back to PORT={fallback!r} -- update that constant if it's wrong."
+    )
+    return fallback
 
 
 def apply_deadzone(value: float, deadzone: float = DEADZONE) -> float:
