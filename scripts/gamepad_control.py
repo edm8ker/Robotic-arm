@@ -16,6 +16,11 @@ guaranteed across brands/drivers.
 
 import time
 
+# COM8 is specific to this machine/board -- Windows assigns COM numbers per
+# USB enumeration history, not per hardware, so it WILL differ on another
+# computer (and can even change here after a board swap). Find yours with
+# `lerobot-find-port` (unplug/replug the board when it asks) or Device
+# Manager under "Ports (COM & LPT)".
 PORT = "COM8"
 FPS = 50
 DEADZONE = 0.08

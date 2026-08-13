@@ -55,6 +55,13 @@ Follow lerobot's own SO-101 assembly/calibration docs first — this pipeline as
 you already have a working, calibrated `so101_follower` that responds to
 `lerobot-calibrate` / `lerobot-teleoperate` with a leader arm or the standard configs.
 
+`PORT = "COM8"` at the top of `gamepad_control.py` and `kinesthetic_record.py` is
+specific to the machine this was built on — the OS assigns port numbers based on USB
+enumeration history, not the hardware itself, so yours will very likely be different
+even with identical parts (it can even change on the *same* machine after a board
+swap). Find yours with `lerobot-find-port` (it has you unplug/replug the board and
+diffs the port list) or, on Windows, Device Manager under "Ports (COM & LPT)".
+
 If you're on Windows, also read the "Windows gotchas" section below before training.
 
 ## 2. Apply the two patches

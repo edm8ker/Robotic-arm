@@ -47,6 +47,9 @@ from lerobot.utils.robot_utils import precise_sleep
 from lerobot.utils.utils import init_logging, log_say
 
 # ---- Config: edit these for your setup / task ----
+# COM8 is specific to this machine/board -- find yours with
+# `lerobot-find-port` (unplug/replug the board when it asks) or Device
+# Manager under "Ports (COM & LPT)". It WILL differ on another computer.
 PORT = "COM8"
 CAMERA_INDEX = 1
 FPS = 30
